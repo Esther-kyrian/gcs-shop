@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>GIS Community System - Formations & Inscription WhatsApp</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Times New Roman fallback + système) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,500;14..32,700&display=swap" rel="stylesheet">
+    <!-- Swiper JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <style>
+        /* TIMES NEW ROMAN : priorité absolue */
+        * {
+            font-family: 'Times New Roman', Times, Georgia, serif !important;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1e2a5e 0%, #2d3a6e 100%);
+            background-attachment: fixed;
+        }
+        
+        /* animations & design gardés mais avec élégance classique */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-fadeInUp { animation: fadeInUp 0.7s ease-out forwards; }
+        .animate-slideInRight { animation: slideInRight 0.5s ease-out; }
+        .stagger-1 { animation-delay: 0.05s; opacity: 0; animation-fill-mode: forwards; }
+        .stagger-2 { animation-delay: 0.15s; opacity: 0; animation-fill-mode: forwards; }
+        .stagger-3 { animation-delay: 0.25s; opacity: 0; animation-fill-mode: forwards; }
+        .stagger-4 { animation-delay: 0.35s; opacity: 0; animation-fill-mode: forwards; }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+        
+        .btn-transition {
+            transition: all 0.2s ease;
+        }
+        .btn-transition:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -8px rgba(0,0,0,0.3);
+        }
+        
+        /* Swiper personnalisé */
+        .swiper {
+            width: 100%;
+            height: 500px;
+            border-radius: 28px;
+            overflow: hidden;
+        }
+        .swiper-slide {
+            background-size: cover;
+            background-position: center;
+        }
+        .swiper-pagination-bullet-active { background: #fbbf24 !important; }
+        
+        /* Chatbot et panier (flottants) */
+        .chatbot-container, .cart-container { position: fixed; z-index: 1000; }
+        .chatbot-container { bottom: 20px; right: 20px; }
+        .cart-container { bottom: 20px; left: 20px; }
+        .chatbot-button, .cart-button {
+            width: 65px; height: 65px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border: 3px solid white; transition: all 0.2s;
+        }
+        .chatbot-button { background: linear-gradient(145deg, #25D366, #128C7E); }
+        .cart-button { background: linear-gradient(145deg, #fbbf24, #f59e0b); }
+        .chatbot-button img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; }
+        
+        .chatbot-window, .cart-window {
+            position: absolute; bottom: 80px; width: 350px;
+            background: white; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            display: none; overflow: hidden;
+        }
+        .chatbot-window.active, .cart-window.active { display: block; animation: fadeInUp 0.2s ease-out; }
+        .chatbot-header { background: linear-gradient(135deg, #128C7E, #075e54); color: white; padding: 14px; display: flex; gap: 12px; }
+        .message.bot .message-content { background: #e9ecef; border-radius: 18px 18px 18px 5px; }
+        .message.user .message-content { background: #25D366; color: white; border-radius: 18px 18px 5px 18px; }
+        
+        /* modal détails formation */
+        .modal-details {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2000; visibility: hidden; opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .modal-details.active { visibility: visible; opacity: 1; }
+        .modal-card {
+            background: white; max-width: 500px; width: 90%; border-radius: 32px;
+            padding: 24px; box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+            transform: scale(0.95); transition: transform 0.2s;
+        }
+        .modal-details.active .modal-card { transform: scale(1); }
+        
+        .price-badge { background: linear-gradient(135deg, #fef08a, #fbbf24); color: #1e293b; border-radius: 40px; padding: 4px 12px; font-weight: bold; }
+        .free-badge { background: #2e7d32; color: white; border-radius: 40px; padding: 4px 12px; font-weight: bold; }
+        .cart-count { position: absolute; top: -5px; right: -5px; background: #dc2626; color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.2); }
+        ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
+        
+        .details-btn {
+            background: rgba(255,255,240,0.3);
+            padding: 6px 12px; border-radius: 30px; font-size: 13px; font-weight: 600;
+            transition: 0.2s;
+        }
+        .details-btn:hover { background: white; color: #1e293b; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navbar -->
+    <nav class="fixed top-0 left-0 w-full z-50 glass-card border-b border-white/30 backdrop-blur-md">
+        <div class="container mx-auto px-5 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="logo-container w-12 h-12 rounded-xl overflow-hidden shadow-lg animate-float">
+                    <img src="Gis Community System.png" alt="Logo" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/200x200?text=GCS'">
+                </div>
+                <span class="font-bold text-2xl text-white drop-shadow">GIS Community System</span>
+            </div>
+            <div class="hidden md:flex space-x-6 text-white font-semibold">
+                <a href="#services" class="hover:text-yellow-300 transition"><i class="fas fa-cogs mr-1"></i> Services</a>
+                <a href="#formations" class="hover:text-yellow-300 transition"><i class="fas fa-graduation-cap mr-1"></i> Formations</a>
+                <a href="#inscription" class="hover:text-yellow-300 transition"><i class="fas fa-edit mr-1"></i> Inscription</a>
+            </div>
+            <button class="bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold btn-transition shadow-md" onclick="toggleCart()"><i class="fas fa-shopping-cart mr-2"></i>Boutique</button>
+        </div>
+    </nav>
+
+    <div class="pt-16">
+        <!-- Hero Swiper (carousel sans dossier images, dégradés de secours) -->
+        <section class="relative">
+            <div class="swiper mySwiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('image.jpg'); background-size: cover; background-color:#1e2a5e;">
+                        <div class="text-center text-white p-6"><h2 class="text-5xl font-bold">Académie GCS</h2><p class="text-xl mt-4">Maîtrisez le digital avec nos experts</p><a href="#formations" class="inline-block mt-6 bg-yellow-400 text-gray-900 px-8 py-3 rounded-full font-bold">Explorer</a></div>
+                    </div>
+                    <div class="swiper-slide" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('image1.jpg'); background-size: cover; background-color:#2d3a6e;">
+                        <div class="text-center text-white p-6"><h2 class="text-5xl font-bold">Certifications pro</h2><p class="text-xl mt-4">+2000 apprenants formés</p><a href="#inscription" class="inline-block mt-6 bg-yellow-400 text-gray-900 px-8 py-3 rounded-full font-bold">Inscription</a></div>
+                    </div>
+                </div>
+                <div class="swiper-button-next"></div><div class="swiper-button-prev"></div><div class="swiper-pagination"></div>
+            </div>
+        </section>
+
+        <!-- Services -->
+        <section id="services" class="py-16">
+            <div class="container mx-auto px-6">
+                <h2 class="text-4xl font-bold text-center text-white mb-14 animate-fadeInUp">Nos pôles d'excellence</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-card p-8 rounded-2xl text-center hover:scale-105 transition"><i class="fas fa-code text-5xl text-yellow-300 mb-4"></i><h3 class="text-2xl font-bold text-white">Dev Web</h3><p class="text-white/80">Fullstack, React, Node.js, projets concrets</p></div>
+                    <div class="glass-card p-8 rounded-2xl text-center hover:scale-105 transition"><i class="fas fa-mobile-alt text-5xl text-yellow-300 mb-4"></i><h3 class="text-2xl font-bold text-white">Apps & logiciels</h3><p class="text-white/80">Mobiles, ERP, solutions sur-mesure</p></div>
+                    <div class="glass-card p-8 rounded-2xl text-center hover:scale-105 transition"><i class="fas fa-chalkboard-user text-5xl text-yellow-300 mb-4"></i><h3 class="text-2xl font-bold text-white">Formations expertes</h3><p class="text-white/80">Accompagnement & certification professionnelle</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Formations : avec bouton VOIR DÉTAILS (plus aucun chemin "images/") -->
+        <section id="formations" class="py-20 bg-white/5 backdrop-blur-sm">
+            <div class="container mx-auto px-6">
+                <h2 class="text-4xl font-bold text-center text-white mb-4 animate-fadeInUp"> Formations professionnelles</h2>
+                <p class="text-center text-white/80 max-w-2xl mx-auto mb-14">Choisissez votre cursus, ajoutez au panier et validez via WhatsApp</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Formation 1 : Design Gratuit -->
+                    <div class="glass-card rounded-2xl overflow-hidden transition-all hover:scale-105">
+                        <div class="h-52 relative"><img src="forma-marketing.png" alt="Design" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Design+Graphique'"><div class="absolute top-3 right-3"><span class="free-badge text-xs">GRATUIT</span></div></div>
+                        <div class="p-5 bg-white/90">
+                            <h3 class="text-2xl font-bold text-gray-800">Design Graphique & Marketing Digital</h3>
+                            <p class="text-gray-600 text-sm mt-1">Canva, Photoshop, Stratégies Social Media, création de contenu viral.</p>
+                            <div class="flex justify-between items-center mt-4"><span class="text-green-700 font-bold"> 100% OFFERT</span><button onclick="showFormationDetails('Design Graphique & Marketing Digital', 'GRATUIT', 'Canva, Photoshop, création de contenu viral, stratégies digitales. Certificat inclus, 8 modules pratiques.')" class="details-btn text-gray-800"><i class="fas fa-eye mr-1"></i> Voir détails</button></div>
+                            <button onclick="addToCart('Design Graphique & Marketing Digital', 0)" class="w-full mt-4 bg-gradient-to-r from-pink-500 to-orange-500 text-white py-2 rounded-xl font-bold btn-transition"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                        </div>
+                    </div>
+                    <!-- Formation 2 : Montage Vidéo IA -->
+                    <div class="glass-card rounded-2xl overflow-hidden transition-all hover:scale-105">
+                        <div class="h-52 relative"><img src="vido2.png" alt="Montage IA" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Montage+IA'"><div class="absolute top-3 right-3"><span class="price-badge text-sm">5.000 FCFA</span></div></div>
+                        <div class="p-5 bg-white/90"><h3 class="text-2xl font-bold text-gray-800">Montage Vidéo avec l'IA</h3><p class="text-gray-600 text-sm">Outils IA génératifs, sous-titrage automatique, effets pro.</p>
+                        <div class="flex justify-between mt-3"><span class="font-semibold text-blue-600"> 5.000 FCFA</span><button onclick="showFormationDetails('Montage Vidéo avec l\'IA', '5.000 FCFA', 'Maîtrisez l’IA pour le montage : Adobe Premiere AI, Descript, sous-titrage automatique, effets spéciaux par intelligence artificielle. Projets réels.')" class="details-btn"><i class="fas fa-eye mr-1"></i> Voir détails</button></div>
+                        <button onclick="addToCart('Montage Vidéo avec l\'IA', 5000)" class="w-full mt-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-2 rounded-xl font-bold btn-transition"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button></div>
+                    </div>
+                    <!-- Formation 3 : Dev Web FullStack -->
+                    <div class="glass-card rounded-2xl overflow-hidden transition-all hover:scale-105">
+                        <div class="h-52 relative"><img src="web.png" alt="Web FullStack" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Web+FullStack'"><div class="absolute top-3 right-3 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold">NOUVEAU</div></div>
+                        <div class="p-5 bg-white/90"><h3 class="text-2xl font-bold text-gray-800">Développement Web Full Stack</h3><p class="text-gray-600 text-sm">HTML/CSS, JavaScript, React, Node.js, MongoDB.</p>
+                        <div class="flex justify-between mt-3"><span class="font-semibold text-purple-700">15.000 FCFA</span><button onclick="showFormationDetails('Développement Web Full Stack', '15.000 FCFA', '12 semaines intensives, 3 projets professionnels, certification reconnue. Maîtrisez le MERN stack et devenez développeur full stack junior.')" class="details-btn"><i class="fas fa-eye mr-1"></i> Voir détails</button></div>
+                        <button onclick="addToCart('Développement Web Full Stack', 15000)" class="w-full mt-4 bg-gradient-to-r from-purple-700 to-pink-600 text-white py-2 rounded-xl font-bold btn-transition"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button></div>
+                    </div>
+                    <!-- Formation 4 : Marketing Digital Avancé -->
+                    <div class="glass-card rounded-2xl overflow-hidden transition-all hover:scale-105">
+                        <div class="h-52 relative"><img src="Mariane.jpg" alt="Marketing" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Marketing+Digital'"><div class="absolute top-3 right-3"><span class="price-badge">12.000 FCFA</span></div></div>
+                        <div class="p-5 bg-white/90"><h3 class="text-2xl font-bold text-gray-800">Marketing Digital Avancé</h3><p class="text-gray-600 text-sm">SEO, Google Ads, Facebook Ads, Analytics, stratégies growth.</p>
+                        <div class="flex justify-between mt-3"><span class="font-semibold text-red-600">12.000 FCFA</span><button onclick="showFormationDetails('Marketing Digital Avancé', '12.000 FCFA', 'Certification Google Ads, campagnes réelles, accompagnement individuel pour devenir expert en acquisition digitale.')" class="details-btn"><i class="fas fa-eye mr-1"></i> Voir détails</button></div>
+                        <button onclick="addToCart('Marketing Digital Avancé', 12000)" class="w-full mt-4 bg-gradient-to-r from-amber-500 to-red-500 text-white py-2 rounded-xl font-bold btn-transition"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button></div>
+                    </div>
+                    <!-- Formation 5 : Data Science & IA (ajoutée) -->
+                    <div class="glass-card rounded-2xl overflow-hidden transition-all hover:scale-105">
+                        <div class="h-52 relative"><img src="possi.jpg" alt="Data Science" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Data+Science'"><div class="absolute top-3 right-3"><span class="price-badge">25.000 FCFA</span></div></div>
+                        <div class="p-5 bg-white/90"><h3 class="text-2xl font-bold text-gray-800">Data Science & Intelligence Artificielle</h3><p class="text-gray-600 text-sm">Python, Pandas, Scikit-learn, Machine Learning, Projets IA.</p>
+                        <div class="flex justify-between mt-3"><span class="font-semibold text-indigo-700">25.000 FCFA</span><button onclick="showFormationDetails('Data Science & IA', '25.000 FCFA', 'Formation complète : analyse de données, modèles prédictifs, réseaux de neurones. Certificat et projet final de A à Z.')" class="details-btn"><i class="fas fa-eye mr-1"></i> Voir détails</button></div>
+                        <button onclick="addToCart('Data Science & Intelligence Artificielle', 25000)" class="w-full mt-4 bg-gradient-to-r from-slate-700 to-indigo-800 text-white py-2 rounded-xl font-bold btn-transition"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button></div>
+                    </div>
+                    <!-- Formation 6 : Community Management Pro -->
+                    <div class="glass-card rounded-2xl overflow-hidden transition-all hover:scale-105">
+                        <div class="h-52 relative"><img src="Capture.PNG" alt="Community" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Community+Manager'"><div class="absolute top-3 right-3"><span class="price-badge">8.000 FCFA</span></div></div>
+                        <div class="p-5 bg-white/90"><h3 class="text-2xl font-bold text-gray-800">Community Management Pro</h3><p class="text-gray-600 text-sm">Gestion des réseaux, stratégie de contenu, Meta Business Suite.</p>
+                        <div class="flex justify-between mt-3"><span class="font-semibold text-emerald-700">8.000 FCFA</span><button onclick="showFormationDetails('Community Management Pro', '8.000 FCFA', 'Stratégies engagement, calendrier éditorial, outils de gestion, cas pratiques. Certificat professionnel.')" class="details-btn"><i class="fas fa-eye mr-1"></i> Voir détails</button></div>
+                        <button onclick="addToCart('Community Management Pro', 8000)" class="w-full mt-4 bg-gradient-to-r from-teal-500 to-emerald-600 text-white py-2 rounded-xl font-bold btn-transition"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Inscription avec redirection WhatsApp + bouton SOUMETTRE -->
+        <section id="inscription" class="py-16">
+            <div class="container mx-auto px-6 max-w-4xl">
+                <div class="glass-card p-8 md:p-10 rounded-3xl">
+                    <h2 class="text-3xl font-bold text-white text-center mb-2">Finalisez votre commande </h2>
+                    <p class="text-white/80 text-center mb-6">Remplissez vos coordonnées – Paiement sécurisé via Mobile Money</p>
+                    
+                    <div id="cartSummary" class="mb-6 p-4 bg-yellow-200/80 backdrop-blur rounded-xl hidden">
+                        <p class="font-bold text-gray-800"><i class="fas fa-shopping-cart"></i> Récapitulatif panier :</p>
+                        <div id="cartItemsList" class="text-sm space-y-1 my-2"></div>
+                        <p class="font-bold text-gray-800">Total : <span id="cartTotalDisplay">0</span> FCFA</p>
+                    </div>
+
+                    <form id="whatsappForm" class="space-y-6">
+                        <div class="grid md:grid-cols-2 gap-5">
+                            <div><label class="text-white font-semibold">Prénom *</label><input type="text" id="prenom" required class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/70"></div>
+                            <div><label class="text-white font-semibold">Nom *</label><input type="text" id="nom" required class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white"></div>
+                        </div>
+                        <div><label class="text-white font-semibold">Email *</label><input type="email" id="email" required class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white"></div>
+                        <div><label class="text-white font-semibold">Téléphone (WhatsApp actif) *</label><input type="tel" id="telephone" required placeholder="+242 06 87 02 524" class="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white"></div>
+                        
+                        <div><label class="text-white font-semibold">Mode de paiement</label>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                                <label class="bg-white/20 p-2 rounded-xl text-center cursor-pointer hover:bg-white/30" onclick="setPayment('MTN Mobile Money Cameroun', 'mtn-cm')"><div class="text-white text-2xl mb-1"></div><span class="text-white text-sm">MTN Cameroun</span><input type="radio" name="paiement" value="MTN Mobile Money Cameroun" class="hidden"></label>
+                                <label class="bg-white/20 p-2 rounded-xl text-center cursor-pointer" onclick="setPayment('MTN Mobile Money Congo', 'mtn-cg')"><div class="text-white text-2xl mb-1"></div><span class="text-white text-sm">MTN Congo</span><input type="radio" name="paiement" value="MTN Mobile Money Congo" class="hidden"></label>
+                                <label class="bg-white/20 p-2 rounded-xl text-center cursor-pointer" onclick="setPayment('Orange Money', 'orange')"><div class="text-white text-2xl mb-1"></div><span class="text-white text-sm">Orange Money</span><input type="radio" name="paiement" value="Orange Money" class="hidden"></label>
+                                <label class="bg-white/20 p-2 rounded-xl text-center cursor-pointer" onclick="setPayment('Airtel Money', 'airtel')"><div class="text-white text-2xl mb-1"></div><span class="text-white text-sm">Airtel Money</span><input type="radio" name="paiement" value="Airtel Money" class="hidden"></label>
+                            </div>
+                        </div>
+                        
+                        <div id="paymentInstructionsBlock" class="payment-instructions hidden bg-black/30 p-4 rounded-xl border-l-4 border-yellow-400 text-white text-sm"></div>
+                        
+                        <button type="submit" id="submitBtn" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 py-4 rounded-xl font-bold text-xl btn-transition shadow-xl"><i class="fab fa-whatsapp mr-2"></i> SOUMETTRE → WhatsApp</button>
+                        <p class="text-white/70 text-center text-sm">En cliquant, vous serez redirigé vers WhatsApp pour confirmer l’inscription avec tous les détails.</p>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <footer class="bg-gray-900/80 text-white py-8 text-center"><p>© 2026 GIS Community System · +242 068702524 · Formations certifiantes</p></footer>
+    </div>
+
+    <!-- Panier flottant -->
+    <div class="cart-container"><div class="cart-window" id="cartWindow"><div class="bg-amber-400 p-3 font-bold">Votre panier</div><div id="cartItems" class="p-3 max-h-64 overflow-auto"><p class="text-gray-500 text-center">Panier vide</p></div><div class="p-3 border-t"><div class="flex justify-between font-bold"><span>Total</span><span id="cartTotal">0 FCFA</span></div><button class="w-full bg-indigo-600 text-white py-2 rounded-xl mt-2" onclick="proceedToCheckout()">Commander</button></div></div><div class="cart-button animate-bounce-slow" onclick="toggleCart()"><i class="fas fa-shopping-cart text-2xl text-gray-800"></i><span id="cartCount" class="cart-count hidden">0</span></div></div>
+
+    <!-- Chatbot Sarah (plus de chemin "images/") -->
+    <div class="chatbot-container"><div class="chatbot-window" id="chatbotWindow"><div class="chatbot-header"><img src="sara.jpeg" onerror="this.src='https://placehold.co/60x60?text=Sarah'"><div><h3 class="font-bold">Sarah AI 🤖</h3><p>Assistante formations</p></div></div><div class="h-80 overflow-auto p-3 bg-gray-50" id="chatMessages"><div class="flex gap-2 mb-3"><img src="sara.jpeg" class="w-8 h-8 rounded-full" onerror="this.src='https://placehold.co/60x60'"><div class="bg-gray-200 p-2 rounded-xl">Bonjour ! Je suis Sarah. Posez vos questions sur les formations, prix ou inscription. 💙</div></div></div><div class="flex p-2 border-t"><input type="text" id="chatInput" class="flex-1 border rounded-full px-3 py-2" placeholder="Écrivez..."><button onclick="sendChatMessage()" class="bg-green-600 text-white rounded-full w-10 ml-2"><i class="fas fa-paper-plane"></i></button></div></div><div class="chatbot-button" onclick="toggleChatbot()"><img src="sara.jpeg" onerror="this.src='https://placehold.co/65x65?text=AI'"></div></div>
+
+    <!-- Modal détails formations -->
+    <div id="detailsModal" class="modal-details"><div class="modal-card"><div class="flex justify-between"><h3 id="modalTitle" class="text-2xl font-bold text-gray-800"></h3><button onclick="closeModal()" class="text-3xl">&times;</button></div><div id="modalPrice" class="mt-1 text-lg font-semibold text-amber-600"></div><p id="modalDesc" class="mt-4 text-gray-700"></p><button onclick="closeModal()" class="mt-6 bg-indigo-600 text-white px-5 py-2 rounded-full w-full">Fermer</button></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script>
+        // Swiper init
+        new Swiper('.mySwiper', { loop: true, autoplay: { delay: 4000 }, pagination: { el: '.swiper-pagination', clickable: true }, navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' }, effect: 'fade' });
+        
+        let cart = [];
+        let selectedPaymentMethod = "";
+        
+        function toggleCart() { document.getElementById('cartWindow').classList.toggle('active'); }
+        function toggleChatbot() { document.getElementById('chatbotWindow').classList.toggle('active'); }
+        
+        function addToCart(name, price) { cart.push({ name, price }); updateCartUI(); showNotif(`✅ ${name} ajouté au panier`, 'success'); }
+        function removeFromCart(index) { cart.splice(index,1); updateCartUI(); showNotif('❌ Article retiré', 'info'); }
+        
+        function updateCartUI() {
+            const container = document.getElementById('cartItems'); const totalSpan = document.getElementById('cartTotal'); const countSpan = document.getElementById('cartCount'); const cartSummaryDiv = document.getElementById('cartSummary'); const itemsListDiv = document.getElementById('cartItemsList'); const totalDisplaySpan = document.getElementById('cartTotalDisplay');
+            if(cart.length===0){ container.innerHTML='<p class="text-gray-500 text-center py-4">Votre panier est vide</p>'; totalSpan.innerText='0 FCFA'; countSpan.classList.add('hidden'); cartSummaryDiv.classList.add('hidden'); return; }
+            let total=0; let itemsHtml=''; cart.forEach((item,idx)=>{ total+=item.price; itemsHtml+=`<div class="flex justify-between items-center border-b py-2"><div><strong>${item.name}</strong><br><span class="text-indigo-600">${item.price.toLocaleString()} FCFA</span></div><i class="fas fa-trash-alt text-red-500 cursor-pointer" onclick="removeFromCart(${idx})"></i></div>`; });
+            container.innerHTML=itemsHtml; totalSpan.innerText=total.toLocaleString()+' FCFA'; countSpan.innerText=cart.length; countSpan.classList.remove('hidden');
+            let summaryHtml=''; cart.forEach(i=>{ summaryHtml+=`<div class="flex justify-between text-sm"><span>${i.name}</span><span>${i.price.toLocaleString()} FCFA</span></div>`; }); itemsListDiv.innerHTML=summaryHtml; totalDisplaySpan.innerText=total.toLocaleString(); cartSummaryDiv.classList.remove('hidden');
+        }
+        
+        function proceedToCheckout() { if(cart.length===0){ showNotif('Panier vide', 'error'); return; } toggleCart(); document.getElementById('inscription').scrollIntoView({behavior:'smooth'}); }
+        
+        function setPayment(method, type) { selectedPaymentMethod = method; document.querySelectorAll('input[name="paiement"]').forEach(r=>r.checked=false); let radio = document.querySelector(`input[value="${method}"]`); if(radio) radio.checked=true; 
+            let instDiv = document.getElementById('paymentInstructionsBlock'); let total = cart.reduce((s,i)=>s+i.price,0); let totalStr=total.toLocaleString();
+            if(type==='mtn-cm') instDiv.innerHTML=`<i class="fas fa-mobile-alt"></i> Paiement MTN Cameroun : Composez *126# → Payer marchand → 681634866 → Montant ${totalStr} FCFA. Envoyez la confirmation WhatsApp.`;
+            else if(type==='mtn-cg') instDiv.innerHTML=`<i class="fas fa-mobile-alt"></i> MTN Congo : *105# → Paiement partenaire → +242068702524 → Montant ${totalStr} FCFA.`;
+            else if(type==='orange') instDiv.innerHTML=`<i class="fas fa-mobile-alt"></i> Orange Money : #144# → Paiement marchand → Montant ${totalStr} FCFA.`;
+            else instDiv.innerHTML=`<i class="fas fa-mobile-alt"></i> Airtel Money : *115# → Paiement → Montant ${totalStr} FCFA.`;
+            instDiv.classList.remove('hidden');
+        }
+        
+        function showFormationDetails(title, price, description) { document.getElementById('modalTitle').innerText=title; document.getElementById('modalPrice').innerHTML=`💰 Tarif : ${price}`; document.getElementById('modalDesc').innerHTML=description; document.getElementById('detailsModal').classList.add('active'); }
+        function closeModal() { document.getElementById('detailsModal').classList.remove('active'); }
+        
+        // SOUMETTRE -> Redirection WhatsApp +242068702524 avec message structuré
+        document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if(cart.length === 0){ showNotif('Veuillez ajouter au moins une formation au panier', 'error'); return; }
+            const prenom = document.getElementById('prenom').value.trim(); const nom = document.getElementById('nom').value.trim(); const email = document.getElementById('email').value.trim(); const telephone = document.getElementById('telephone').value.trim();
+            if(!prenom || !nom || !email || !telephone){ showNotif('Tous les champs sont requis', 'error'); return; }
+            if(!selectedPaymentMethod){ showNotif('Choisissez un mode de paiement', 'error'); return; }
+            
+            let formationsText = cart.map(f => `• ${f.name} : ${f.price.toLocaleString()} FCFA`).join('%0A');
+            let totalAmount = cart.reduce((s,i)=>s+i.price,0);
+            let message = `🟢 *NOUVELLE INSCRIPTION GIS COMMUNITY*%0A%0A👤 Nom : ${nom}%0A👤 Prénom : ${prenom}%0A📧 Email : ${email}%0A📞 Téléphone : ${telephone}%0A%0A📚 *Formations sélectionnées :*%0A${formationsText}%0A%0A💰 *Total à payer :* ${totalAmount.toLocaleString()} FCFA%0A💳 *Mode de paiement :* ${selectedPaymentMethod}%0A%0A✅ Merci de confirmer la validation et m'envoyer les modalités d'accès. Code promo ?%0A🙏 Je vais effectuer le paiement immédiatement.`;
+            let waLink = `https://wa.me/242068702524?text=${message}`;
+            window.open(waLink, '_blank');
+            showNotif('Redirection vers WhatsApp pour finaliser votre inscription', 'success');
+        });
+        
+        function showNotif(msg, type) { let div = document.createElement('div'); div.className=`fixed top-24 right-5 z-[9999] bg-${type==='success'?'green-500':'red-500'} text-white px-5 py-3 rounded-xl shadow-xl animate-slideInRight`; div.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-triangle'} mr-2"></i>${msg}`; document.body.appendChild(div); setTimeout(()=>div.remove(),4500); }
+        
+        // Chatbot simple amélioré (sans référence aux images manquantes)
+        function sendChatMessage() { let inp = document.getElementById('chatInput'); let msg = inp.value.trim(); if(!msg) return; let container=document.getElementById('chatMessages'); let userDiv=document.createElement('div'); userDiv.className='flex justify-end mb-3'; userDiv.innerHTML=`<div class="bg-green-500 text-white p-2 rounded-xl max-w-[70%]">${msg}</div>`; container.appendChild(userDiv); inp.value='';
+            setTimeout(()=>{ let botResponse = "💡 Un conseiller vous répondra sous peu. Pour les prix/formations, consultez la section formations et ajoutez au panier. Soumettez via WhatsApp pour finaliser l'inscription."; if(msg.toLowerCase().includes('prix')||msg.toLowerCase().includes('tarif')) botResponse="📢 Formations : Design (GRATUIT), Montage IA (5k), Web FullStack (15k), Marketing (12k), Data Science (25k), Community (8k). Utilisez le panier !"; if(msg.toLowerCase().includes('whatsapp')) botResponse="📱 Contact admin : +242068702524. Cliquez sur SOUMETTRE après avoir rempli le formulaire."; let botDiv=document.createElement('div'); botDiv.className='flex gap-2 mb-3'; botDiv.innerHTML=`<img src="sara.jpeg" class="w-8 h-8 rounded-full" onerror="this.src='https://placehold.co/60x60'"><div class="bg-gray-200 p-2 rounded-xl">${botResponse}</div>`; container.appendChild(botDiv); container.scrollTop=container.scrollHeight; }, 400);
+            container.scrollTop=container.scrollHeight;
+        }
+        
+        document.querySelectorAll('a[href^="#"]').forEach(anchor=>{ anchor.addEventListener('click',function(e){ e.preventDefault(); document.querySelector(this.getAttribute('href'))?.scrollIntoView({behavior:'smooth'}); }); });
+        updateCartUI();
+    </script>
+</body>
+</html>
